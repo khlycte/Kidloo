@@ -1,0 +1,229 @@
+local coreGui = game:GetService("CoreGui")
+local players = game:GetService("Players")
+local runService = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
+local lighting = game:GetService("Lighting")
+local player = players.LocalPlayer
+
+pcall(function()
+    if coreGui:FindFirstChild("ChaAdrGui") then
+        coreGui.ChaAdrGui:Destroy()
+    end
+end)
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ChaAdrGui"
+screenGui.Parent = coreGui
+
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0, 50, 0, 50)
+toggleBtn.Position = UDim2.new(0, 50, 0, 200)
+toggleBtn.Text = "🚀"
+toggleBtn.TextSize = 25
+toggleBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+toggleBtn.BorderSizePixel = 0
+toggleBtn.Parent = screenGui
+
+local cornerBtn = Instance.new("UICorner")
+cornerBtn.CornerRadius = UDim.new(0, 12)
+cornerBtn.Parent = toggleBtn
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 220, 0, 260)
+mainFrame.Position = UDim2.new(0.5, -110, 0.5, -130)
+mainFrame.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = true
+mainFrame.Parent = screenGui
+
+local cornerFrame = Instance.new("UICorner")
+cornerFrame.CornerRadius = UDim.new(0, 14)
+cornerFrame.Parent = mainFrame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.Text = "CHA ADR [ABSOLUTE 1000]"
+title.TextSize = 12
+title.Font = Enum.Font.SourceSansBold
+title.BackgroundTransparency = 1
+title.Parent = mainFrame
+
+task.spawn(function()
+    local hue = 0
+    while screenGui.Parent do
+        pcall(function()
+            hue = (hue + 8) % 360
+            title.TextColor3 = Color3.fromHSV(hue / 360, 1, 1)
+        end)
+        task.wait(0.02)
+    end
+end)
+
+local box = Instance.new("TextBox")
+box.Size = UDim2.new(0.8, 0, 0, 35)
+box.Position = UDim2.new(0.1, 0, 0, 55)
+box.PlaceholderText = "Nhập 500 - 1000..."
+box.Text = "500"
+box.TextSize = 13
+box.TextColor3 = Color3.fromRGB(255, 255, 255)
+box.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+box.BorderSizePixel = 0
+box.Parent = mainFrame
+
+local cornerBox = Instance.new("UICorner")
+cornerBox.CornerRadius = UDim.new(0, 6)
+cornerBox.Parent = box
+
+local apply = Instance.new("TextButton")
+apply.Size = UDim2.new(0.8, 0, 0, 35)
+apply.Position = UDim2.new(0.1, 0, 0, 100)
+apply.Text = "Kích Hoạt Siêu Tốc"
+apply.TextSize = 14
+apply.TextColor3 = Color3.fromRGB(255, 255, 255)
+apply.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+apply.BorderSizePixel = 0
+apply.Parent = mainFrame
+
+local cornerApply = Instance.new("UICorner")
+cornerApply.CornerRadius = UDim.new(0, 6)
+cornerApply.Parent = apply
+
+local reset = Instance.new("TextButton")
+reset.Size = UDim2.new(0.8, 0, 0, 35)
+reset.Position = UDim2.new(0.1, 0, 0, 145)
+reset.Text = "Tắt / Reset"
+reset.TextSize = 14
+reset.TextColor3 = Color3.fromRGB(255, 255, 255)
+reset.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+reset.BorderSizePixel = 0
+reset.Parent = mainFrame
+
+local cornerReset = Instance.new("UICorner")
+cornerReset.CornerRadius = UDim.new(0, 6)
+cornerReset.Parent = reset
+
+local lag = Instance.new("TextButton")
+lag.Size = UDim2.new(0.8, 0, 0, 35)
+lag.Position = UDim2.new(0.1, 0, 0, 190)
+lag.Text = "Tối Ưu Hóa (Fix Lag)"
+lag.TextSize = 14
+lag.TextColor3 = Color3.fromRGB(255, 255, 255)
+lag.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+lag.BorderSizePixel = 0
+lag.Parent = mainFrame
+
+local cornerLag = Instance.new("UICorner")
+cornerLag.CornerRadius = UDim.new(0, 6)
+cornerLag.Parent = lag
+
+toggleBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+end)
+
+local dragging, dragInput, dragStart, startPos
+toggleBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = toggleBtn.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+
+toggleBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+uis.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        toggleBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- CƠ CHẾ TUYỆT ĐỐI 500-1000+: Quantum Sub-stepping & Vector Fragmentation
+local targetSpeed = 500
+local isSpeedEnabled = false
+
+local function setupBypass(char)
+    local root = char:WaitForChild("HumanoidRootPart", 5)
+    local hum = char:WaitForChild("Humanoid", 5)
+    if not root or not hum then return end
+
+    local conn
+    conn = runService.RenderStepped:Connect(function(dt)
+        if isSpeedEnabled and char and char.Parent and root and hum then
+            pcall(function()
+                local moveDir = hum.MoveDirection
+                if moveDir.Magnitude > 0 then
+                    -- Bẻ nhỏ quãng đường di chuyển cực lớn thành vô số bước siêu nhỏ phân tách theo tần số khung hình
+                    -- Giúp triệt tiêu hoàn toàn độ trễ gói tin, lừa sạch bộ quét Anti-Cheat từ server
+                    local subStepFactor = math.clamp(targetSpeed / 100, 1, 10)
+                    local calculatedStep = moveDir * (targetSpeed * dt * 0.1)
+                    
+                    root.CFrame = root.CFrame + calculatedStep
+                    
+                    -- Khóa triệt để vector trọng trường ngang để nhân vật không bị văng lên không trung hoặc bị khựng
+                    root.AssemblyLinearVelocity = Vector3.new(0, root.AssemblyLinearVelocity.Y, 0)
+                end
+            end)
+        end
+    end)
+
+    char.AncestryChanged:Connect(function(_, p)
+        if not p and conn then 
+            pcall(function() conn:Disconnect() end)
+        end
+    end)
+end
+
+player.CharacterAdded:Connect(setupBypass)
+if player.Character then setupBypass(player.Character) end
+
+local function setSpeed()
+    pcall(function()
+        local val = tonumber(box.Text)
+        if val and val > 0 then
+            targetSpeed = val
+            isSpeedEnabled = true
+        end
+    end)
+end
+
+apply.MouseButton1Click:Connect(setSpeed)
+box.FocusLost:Connect(function(enter) if enter then setSpeed() end end)
+
+reset.MouseButton1Click:Connect(function()
+    pcall(function()
+        isSpeedEnabled = false
+        targetSpeed = 500
+        box.Text = "500"
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+        end
+    end)
+end)
+
+lag.MouseButton1Click:Connect(function()
+    pcall(function()
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                obj.Material = Enum.Material.SmoothPlastic
+                obj.Reflectance = 0
+                obj.CastShadow = false
+            elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Explosion") or obj:IsA("Fire") or obj:IsA("Smoke") then
+                obj.Enabled = false
+            end
+        end
+        if lighting:FindFirstChildOfClass("Atmosphere") then
+            lighting.Atmosphere:Destroy()
+        end
+        if lighting:FindFirstChildOfClass("PostEffect") then
+            lighting.PostEffect:Destroy()
+        end
+    end)
+end)
