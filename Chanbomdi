@@ -1,0 +1,409 @@
+local imageUrl = "https://photos.app.goo.gl/N3N2Tmt1E6VQgF467"
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local Lighting = game:GetService("Lighting")
+local Terrain = Workspace:FindFirstChildOfClass("Terrain")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = Workspace.CurrentCamera
+
+local Config = {
+    Chams = true,
+    AimAuto = false,
+    FOVRadius = 150,
+    ShowFOV = true,
+    Spin = false,
+    SpinSpeed = 20,
+    ThirdPerson = false,
+    FixLag = false
+}
+
+local function getCustomImage(url, fileName)
+    if writefile and getgenv and getgenv().getcustomasset then
+        if not isfile(fileName) then
+            local success, response = pcall(function() return game:HttpGet(url) end)
+            if success then writefile(fileName, response) end
+        end
+        if isfile(fileName) then return getgenv().getcustomasset(fileName) end
+    end
+    return "rbxassetid://138379435165992"
+end
+
+local imageAsset = getCustomImage(imageUrl, "kica_hub_icon.png")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "KICA_HUB"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Visible = true
+FOVCircle.Transparency = 0.7
+FOVCircle.Thickness = 1.5
+FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+FOVCircle.Filled = false
+FOVCircle.Radius = Config.FOVRadius
+
+local ToggleButton = Instance.new("ImageButton")
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0.05, 0, 0.2, 0)
+ToggleButton.Image = imageAsset
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.Parent = ScreenGui
+
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+
+local ToggleStroke = Instance.new("UIStroke", ToggleButton)
+ToggleStroke.Thickness = 2
+ToggleStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 320, 0, 220)
+MainFrame.Position = UDim2.new(0.05, 0, 0.3, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = true
+MainFrame.Parent = ScreenGui
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+RunService.RenderStepped:Connect(function()
+    local hue = (tick() % 5) / 5
+    ToggleStroke.Color = Color3.fromHSV(hue, 1, 1)
+    
+    FOVCircle.Visible = Config.ShowFOV and Config.AimAuto
+    FOVCircle.Radius = Config.FOVRadius
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+end)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Text = "KICA HUB"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+Title.Font = Enum.Font.SourceSansBold
+Title.BackgroundTransparency = 1
+Title.Parent = MainFrame
+
+local TabHolder = Instance.new("Frame")
+TabHolder.Size = UDim2.new(0, 90, 1, -35)
+TabHolder.Position = UDim2.new(0, 5, 0, 30)
+TabHolder.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+TabHolder.Parent = MainFrame
+Instance.new("UICorner", TabHolder).CornerRadius = UDim.new(0, 6)
+
+local ESPTabBtn = Instance.new("TextButton")
+ESPTabBtn.Size = UDim2.new(1, -10, 0, 28)
+ESPTabBtn.Position = UDim2.new(0, 5, 0, 5)
+ESPTabBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+ESPTabBtn.Text = "ESP"
+ESPTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ESPTabBtn.Font = Enum.Font.SourceSansBold
+ESPTabBtn.Parent = TabHolder
+Instance.new("UICorner", ESPTabBtn).CornerRadius = UDim.new(0, 4)
+
+local AIMTabBtn = Instance.new("TextButton")
+AIMTabBtn.Size = UDim2.new(1, -10, 0, 28)
+AIMTabBtn.Position = UDim2.new(0, 5, 0, 38)
+AIMTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+AIMTabBtn.Text = "AIM"
+AIMTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AIMTabBtn.Font = Enum.Font.SourceSansBold
+AIMTabBtn.Parent = TabHolder
+Instance.new("UICorner", AIMTabBtn).CornerRadius = UDim.new(0, 4)
+
+local SettingTabBtn = Instance.new("TextButton")
+SettingTabBtn.Size = UDim2.new(1, -10, 0, 28)
+SettingTabBtn.Position = UDim2.new(0, 5, 0, 71)
+SettingTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+SettingTabBtn.Text = "Setting"
+SettingTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SettingTabBtn.Font = Enum.Font.SourceSansBold
+SettingTabBtn.Parent = TabHolder
+Instance.new("UICorner", SettingTabBtn).CornerRadius = UDim.new(0, 4)
+
+local ESPPage = Instance.new("ScrollingFrame")
+ESPPage.Size = UDim2.new(1, -105, 1, -35)
+ESPPage.Position = UDim2.new(0, 100, 0, 30)
+ESPPage.BackgroundTransparency = 1
+ESPPage.Visible = true
+ESPPage.CanvasSize = UDim2.new(0, 0, 0, 100)
+ESPPage.ScrollBarThickness = 3
+ESPPage.Parent = MainFrame
+
+local AIMPage = Instance.new("ScrollingFrame")
+AIMPage.Size = UDim2.new(1, -105, 1, -35)
+AIMPage.Position = UDim2.new(0, 100, 0, 30)
+AIMPage.BackgroundTransparency = 1
+AIMPage.Visible = false
+AIMPage.CanvasSize = UDim2.new(0, 0, 0, 130)
+AIMPage.ScrollBarThickness = 3
+AIMPage.Parent = MainFrame
+
+local SettingPage = Instance.new("ScrollingFrame")
+SettingPage.Size = UDim2.new(1, -105, 1, -35)
+SettingPage.Position = UDim2.new(0, 100, 0, 30)
+SettingPage.BackgroundTransparency = 1
+SettingPage.Visible = false
+SettingPage.CanvasSize = UDim2.new(0, 0, 0, 220)
+SettingPage.ScrollBarThickness = 3
+SettingPage.Parent = MainFrame
+
+local function switchTab(activeBtn, activePage)
+    ESPTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    AIMTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    SettingTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    
+    ESPPage.Visible = false
+    AIMPage.Visible = false
+    SettingPage.Visible = false
+    
+    activeBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    activePage.Visible = true
+end
+
+ESPTabBtn.MouseButton1Click:Connect(function() switchTab(ESPTabBtn, ESPPage) end)
+AIMTabBtn.MouseButton1Click:Connect(function() switchTab(AIMTabBtn, AIMPage) end)
+SettingTabBtn.MouseButton1Click:Connect(function() switchTab(SettingTabBtn, SettingPage) end)
+
+local function createToggle(parent, text, yPos, defaultState, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -15, 0, 30)
+    btn.Position = UDim2.new(0, 5, 0, yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    btn.Text = text .. (defaultState and ": BẬT" or ": TẮT")
+    btn.TextColor3 = defaultState and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 13
+    btn.Parent = parent
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+
+    local state = defaultState
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        btn.Text = text .. (state and ": BẬT" or ": TẮT")
+        btn.TextColor3 = state and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
+        callback(state)
+    end)
+    return btn
+end
+
+local function createTextBox(parent, labelText, yPos, defaultValue, callback)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -15, 0, 15)
+    lbl.Position = UDim2.new(0, 5, 0, yPos)
+    lbl.Text = labelText
+    lbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+    lbl.TextSize = 12
+    lbl.Font = Enum.Font.SourceSans
+    lbl.BackgroundTransparency = 1
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = parent
+
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(1, -15, 0, 25)
+    box.Position = UDim2.new(0, 5, 0, yPos + 18)
+    box.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    box.Text = tostring(defaultValue)
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.Font = Enum.Font.SourceSansBold
+    box.TextSize = 13
+    box.Parent = parent
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
+
+    box.FocusLost:Connect(function()
+        local val = tonumber(box.Text)
+        if val then callback(val) else box.Text = tostring(defaultValue) end
+    end)
+end
+
+createToggle(ESPPage, "chams red", 5, Config.Chams, function(v) Config.Chams = v end)
+
+createToggle(AIMPage, "aim auto", 5, Config.AimAuto, function(v) Config.AimAuto = v end)
+createToggle(AIMPage, "KICA HUB", 40, Config.ShowFOV, function(v) Config.ShowFOV = v end)
+createTextBox(AIMPage, "Đường kính FOV:", 75, Config.FOVRadius, function(v) Config.FOVRadius = v end)
+
+createToggle(SettingPage, "Xoay Nhân Vật (Spin)", 5, Config.Spin, function(v) Config.Spin = v end)
+createTextBox(SettingPage, "Tốc độ quay spin:", 42, Config.SpinSpeed, function(v) Config.SpinSpeed = v end)
+createToggle(SettingPage, "góc nhìn thứ 3", 85, Config.ThirdPerson, function(v) Config.ThirdPerson = v end)
+createToggle(SettingPage, "fix lag", 125, Config.FixLag, function(v)
+    Config.FixLag = v
+    if v then
+        pcall(function()
+            if setfpscap then
+                setfpscap(120)
+            end
+        end)
+
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 9e9
+        Lighting.Brightness = 2
+        
+        if Terrain then
+            Terrain.WaterWaveSize = 0
+            Terrain.WaterWaveSpeed = 0
+            Terrain.WaterTransparency = 0
+            Terrain.WaterReflectance = 0
+        end
+
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            if obj:IsA("BasePart") then
+                obj.Material = Enum.Material.SmoothPlastic
+                obj.Reflectance = 0
+                obj.CastShadow = false
+            elseif obj:IsA("MeshPart") then
+                obj.Material = Enum.Material.SmoothPlastic
+                obj.Reflectance = 0
+                obj.CastShadow = false
+                obj.TextureID = ""
+            elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Fire") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("Beam") then
+                obj.Enabled = false
+            elseif obj:IsA("Explosion") then
+                obj.Visible = false
+            elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                obj.Transparency = 1
+            elseif obj:IsA("Accessory") then
+                local handle = obj:FindFirstChild("Handle")
+                if handle then handle:Destroy() end
+            end
+        end
+
+        for _, descendant in pairs(Lighting:GetDescendants()) do
+            if descendant:IsA("PostEffect") then
+                descendant.Enabled = false
+            end
+        end
+    end
+end)
+
+-- Hàm kiểm tra kẻ địch linh hoạt
+local function isRivalsEnemy(player)
+    if player == LocalPlayer then return false end
+    
+    if LocalPlayer.Team and player.Team then
+        return LocalPlayer.Team ~= player.Team
+    end
+    
+    local localTeamVal = LocalPlayer:FindFirstChild("Team") or LocalPlayer:FindFirstChild("TeamValue")
+    local targetTeamVal = player:FindFirstChild("Team") or player:FindFirstChild("TeamValue")
+    
+    if localTeamVal and targetTeamVal then
+        return localTeamVal.Value ~= targetTeamVal.Value
+    end
+
+    if LocalPlayer.TeamColor and player.TeamColor then
+        return LocalPlayer.TeamColor ~= player.TeamColor
+    end
+
+    return true
+end
+
+-- Vòng lặp cập nhật Chams Red (Bổ sung AlwaysOnTop)
+task.spawn(function()
+    while task.wait(0.3) do
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Character then
+                local char = player.Character
+                local hl = char:FindFirstChild("MultiTabHighlight")
+
+                if Config.Chams and isRivalsEnemy(player) then
+                    if not hl then
+                        hl = Instance.new("Highlight")
+                        hl.Name = "MultiTabHighlight"
+                        hl.FillColor = Color3.fromRGB(255, 0, 0)
+                        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        hl.FillTransparency = 0.2
+                        -- Dòng quan trọng giúp hiển thị định vị xuyên tường
+                        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                        hl.Parent = char
+                    end
+                    hl.Enabled = true
+                else
+                    if hl then hl:Destroy() end
+                end
+            end
+        end
+    end
+end)
+
+local function isVisible(targetPart, char)
+    if not targetPart then return false end
+    local origin = Camera.CFrame.Position
+    local direction = targetPart.Position - origin
+    
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, char}
+    
+    local result = Workspace:Raycast(origin, direction, raycastParams)
+    return result == nil
+end
+
+local function getValidTarget()
+    local closestPos = nil
+    local shortestDist = Config.FOVRadius
+    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if isRivalsEnemy(player) and player.Character then
+            local char = player.Character
+            local hl = char:FindFirstChild("MultiTabHighlight")
+            
+            if hl and hl.Enabled then
+                local targetPart = char:FindFirstChild("Head") or char:FindFirstChild("HumanoidRootPart")
+                if targetPart and isVisible(targetPart, char) then
+                    local screenPos, onScreen = Camera:WorldToViewportPoint(targetPart.Position)
+                    if onScreen then
+                        local dist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
+                        if dist <= shortestDist then
+                            shortestDist = dist
+                            closestPos = targetPart.Position
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return closestPos
+end
+
+local spinAngle = 0
+RunService.RenderStepped:Connect(function()
+    if Config.AimAuto then
+        local targetPos = getValidTarget()
+        if targetPos then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPos)
+        end
+    end
+
+    if Config.Spin and LocalPlayer.Character then
+        local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            spinAngle = spinAngle + Config.SpinSpeed
+            root.CFrame = CFrame.new(root.Position) * CFrame.Angles(0, math.rad(spinAngle), 0)
+        end
+    end
+
+    if Config.ThirdPerson then
+        LocalPlayer.CameraMode = Enum.CameraMode.Classic
+        LocalPlayer.DevComputerCameraMode = Enum.DevComputerCameraMode.EnableClassic
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            if Camera.CameraSubject ~= LocalPlayer.Character:FindFirstChild("Humanoid") then
+                Camera.CameraSubject = LocalPlayer.Character:FindFirstChild("Humanoid")
+            end
+            if (Camera.CFrame.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude < 2 then
+                Camera.CFrame = Camera.CFrame + (Camera.CFrame.LookVector * -10)
+            end
+        end
+    end
+end)
