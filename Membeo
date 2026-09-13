@@ -266,12 +266,10 @@ createTextBox(SettingPage, "Tốc độ quay spin:", 230, Config.SpinSpeed, func
 
 createToggle(SettingPage, "góc nhìn thứ 3", 273, Config.ThirdPerson, function(v) 
     Config.ThirdPerson = v
-    if v then
-        LocalPlayer.CameraMaxZoomDistance = 25
-        LocalPlayer.CameraMinZoomDistance = 10
-    else
+    if not v then
         LocalPlayer.CameraMaxZoomDistance = 400
         LocalPlayer.CameraMinZoomDistance = 0.5
+        LocalPlayer.CameraMode = Enum.CameraMode.Classic
         if LocalPlayer.Character then
             for _, p in pairs(LocalPlayer.Character:GetChildren()) do
                 if p:IsA("BasePart") then p.LocalTransparencyModifier = 0 end
@@ -503,6 +501,12 @@ end
 
 local spinAngle = 0
 RunService.RenderStepped:Connect(function()
+    if Config.ThirdPerson then
+        LocalPlayer.CameraMode = Enum.CameraMode.Classic
+        LocalPlayer.CameraMaxZoomDistance = 25
+        LocalPlayer.CameraMinZoomDistance = 10
+    end
+
     if Config.Fly then
         local Character = LocalPlayer.Character
         if Character then
