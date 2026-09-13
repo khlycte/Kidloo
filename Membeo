@@ -23,7 +23,7 @@ local Config = {
 }
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KICA_HUB"
+ScreenGui.Name = "Meo Hub V1"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
