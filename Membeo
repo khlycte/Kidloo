@@ -424,9 +424,18 @@ local function isVisible(targetPart, char)
     local raycastParams = RaycastParams.new()
     raycastParams.FilterType = Enum.RaycastFilterType.Exclude
     raycastParams.FilterDescendantsInstances = {LocalPlayer.Character, char}
+    raycastParams.IgnoreWater = true
     
     local result = Workspace:Raycast(origin, direction, raycastParams)
-    return result == nil
+    
+    if result then
+        local hitPart = result.Instance
+        if not hitPart:IsDescendantOf(char) then
+            return false
+        end
+    end
+    
+    return true
 end
 
 local function getValidEnemyPlayer()
