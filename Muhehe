@@ -1,50 +1,73 @@
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local TeleportService = game:GetService("TeleportService")
 local CoreGui = game:GetService("CoreGui")
 local Lighting = game:GetService("Lighting")
-local localPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
 assert(hookmetamethod and getnamecallmethod and checkcaller and newcclosure, "Executor error")
 
--- Bộ lọc thông minh chặn các remote báo cáo gian lận (Anti-cheat telemetry) ngầm mà không làm nặng máy
-local suspiciousKeywords = {"anticheat", "report", "detect", "ban", "integrity", "protect", "ac_", "_ac"}
-local function isSuspiciousRemote(name)
+local eternalBlacklist = {
+    anticheat = true, report = true, detect = true, ban = true, 
+    integrity = true, protect = true, ac = true, _ac = true, 
+    kick = true, punish = true, security = true, telemetry = true, 
+    payload = true, verify = true, check = true, debug = true, 
+    scan = true, memory = true, exploit = true, observer = true, watch = true,
+    sync = true, validation = true, state = true, analysis = true, probe = true,
+    inspect = true, audit = true, tracker = true, firewall = true, corecheck = true,
+    hyper = true, omega = true, sentinel = true, guard = true, shield = true,
+    omni = true, absolute = true, ultimate = true, transcendent = true, void = true,
+    infinite = true, eternal = true, singularity = true, apex = true, zero = true,
+    zenith = true, core = true, matrix = true, boundary = true, immutable = true,
+    null = true, absolute_zero = true, transcendental = true, infinity = true,
+    origin = true, source = true, alpha = true, omega_prime = true, genesis = true,
+    eternity = true, timeless = true, absolute_domain = true, untouchable = true
+}
+
+local function eternalVerify(name)
     if type(name) ~= "string" then return false end
-    local lower = name:lower()
-    for _, keyword in ipairs(suspiciousKeywords) do
-        if lower:find(keyword) then
-            return true
-        end
+    for word in name:lower():gmatch("%w+") do
+        if eternalBlacklist[word] then return true end
     end
     return false
 end
 
--- 1. Chặn toàn bộ lệnh Kick, Teleport ép buộc và chặn gửi dữ liệu tố cáo bất thường về Server
+local eternalMock = setmetatable({}, {
+    __index = function(_, k)
+        if k == "Connected" or k == "Success" or k == "Valid" or k == "Status" or k == "Accepted" or k == "Clean" or k == "Safe" or k == "Verified" or k == "Absolute" or k == "Omni" or k == "Eternal" or k == "Apex" or k == "Null" or k == "Origin" or k == "Timeless" then return true end
+        return function() return eternalMock end
+    end,
+    __call = function()
+        return true, "Eternal_Singularity_Normalized"
+    end,
+    __tostring = function()
+        return "Eternal_Core_Active"
+    end
+})
+
 local oldNamecall
 oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
     local method = getnamecallmethod()
-    local arguments = {...}
     local isExploitCalling = false
     pcall(function() isExploitCalling = checkcaller() end)
 
     if not isExploitCalling then
-        -- Chặn đứng lệnh Kick người chơi
-        if self == localPlayer and (method == "Kick" or method == "kick") then
+        if self == LocalPlayer and (method == "Kick" or method == "kick") then
             return coroutine.yield()
         end
 
-        -- Chặn các Remote tố cáo ngầm gửi về server khi bật hack
         if method == "FireServer" or method == "InvokeServer" then
             local success, name = pcall(function() return self.Name end)
-            if success and isSuspiciousRemote(name) then
-                return nil -- Vô hiệu hóa tín hiệu báo cáo chống gian lận
+            if success and eternalVerify(name) then
+                if method == "InvokeServer" then
+                    return eternalMock
+                end
+                return nil
             end
         end
 
-        -- Chặn hành vi tự hủy thư mục game cốt lõi
         if method == "ClearAllChildren" or method == "Destroy" or method == "Remove" then
-            if self == localPlayer or self == localPlayer.Character or self == CoreGui or self == Lighting then
+            if self == LocalPlayer or self == LocalPlayer.Character or self == CoreGui or self == Lighting or self == Workspace then
                 return nil
             end
         end
@@ -52,47 +75,63 @@ oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
     return oldNamecall(self, ...)
 end))
 
--- 2. Chặn các Index-level bypass kick ngầm
 local oldIndex
 oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, propertyKey)
     local isExploitCalling = false
     pcall(function() isExploitCalling = checkcaller() end)
 
     if not isExploitCalling then
-        if self == localPlayer and (propertyKey == "Kick" or propertyKey == "kick") then
+        if self == LocalPlayer and (propertyKey == "Kick" or propertyKey == "kick") then
             return coroutine.yield()
         end
-        if self == localPlayer and propertyKey == "GameplayPaused" then
+        if self == LocalPlayer and (propertyKey == "GameplayPaused" or propertyKey == "DevComputerCameraMode") then
             return false
         end
     end
     return oldIndex(self, propertyKey)
 end))
 
--- 3. Chống AFK thông minh siêu nhẹ (không gây tụt FPS)
-local virtualUserInstance = game:GetService("VirtualUser")
-localPlayer.Idled:Connect(function()
+local oldNewIndex
+oldNewIndex = hookmetamethod(game, "__newindex", newcclosure(function(self, propertyKey, value)
+    local isExploitCalling = false
+    pcall(function() isExploitCalling = checkcaller() end)
+
+    if not isExploitCalling and self and self.Parent and self.Parent == LocalPlayer.Character then
+        if propertyKey == "WalkSpeed" or propertyKey == "JumpPower" or propertyKey == "HipHeight" or propertyKey == "RotVelocity" then
+            return
+        end
+    end
+    return oldNewIndex(self, propertyKey, value)
+end))
+
+RunService.Stepped:Connect(function()
     pcall(function()
-        local currentCam = workspace.CurrentCamera
+        local char = LocalPlayer.Character
+        if char then
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+                hum:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, false)
+            end
+        end
+    end)
+end)
+
+local virtualUserInstance = game:GetService("VirtualUser")
+LocalPlayer.Idled:Connect(function()
+    pcall(function()
+        local currentCam = Workspace.CurrentCamera
         if currentCam then
             virtualUserInstance:Button2Down(Vector2.new(0, 0), currentCam.CFrame)
-            task.wait(1)
+            task.wait(0.01)
             virtualUserInstance:Button2Up(Vector2.new(0, 0), currentCam.CFrame)
         end
     end)
 end)
 
-print("⚡ [ULTRA-SHIELD STEALTH] BẢO VỆ SIÊU CẤP - KHÔNG GIẬT LAG - ĐANG TẢI MENU... ⚡")
-
--- 4. Tải script Aim & Fly trong luồng riêng biệt, giữ nguyên khung hình mượt mà
 task.spawn(function()
-    local success, err = pcall(function()
+    pcall(function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/khlycte/Kidloo/refs/heads/main/Membeo"))()
     end)
-    if not success then
-        warn("Lỗi tải script ngoài: " .. tostring(err))
-    else
-        print("⚡ [ULTRA-SHIELD] Kích hoạt thành công! FPS mượt mà & An toàn tuyệt đối.")
-    end
 end)
-
