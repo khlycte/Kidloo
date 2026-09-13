@@ -1,208 +1,286 @@
 local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+
 local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
+local Camera = Workspace.CurrentCamera
 
 local Config = {
+    Chams = true,
+    HealthESP = true,
     AimAuto = false,
     FOVRadius = 150,
     ShowFOV = true,
-    Chams = false,
-    HealthESP = false,
     AutoKill = false,
-    AutoKillDistance = 3,
-    Fly = false,
-    FlySpeed = 50,
-    Noclip = false,
+    AutoKillDistance = 5,
+    SelectedTarget = "Tất Cả",
     Spin = false,
-    SpinSpeed = 10,
-    SelectedTarget = "Tất Cả"
+    SpinSpeed = 20,
+    ThirdPerson = false,
+    Fly = false,
+    FlySpeed = 50
 }
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "MeoHubV1"
+ScreenGui.Name = "Meo Hub V1"
 ScreenGui.ResetOnSpawn = false
-
-if syn and syn.protect_gui then
-    syn.protect_gui(ScreenGui)
-    ScreenGui.Parent = game:GetService("CoreGui")
-elseif gethui then
-    ScreenGui.Parent = gethui()
-else
-    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local FOVCircle = Drawing.new("Circle")
+FOVCircle.Visible = true
+FOVCircle.Transparency = 0.7
 FOVCircle.Thickness = 1.5
 FOVCircle.Color = Color3.fromRGB(255, 255, 255)
-FOVCircle.Transparency = 1
 FOVCircle.Filled = false
-FOVCircle.Visible = Config.ShowFOV
 FOVCircle.Radius = Config.FOVRadius
-FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
 
-RunService.RenderStepped:Connect(function()
-    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    FOVCircle.Radius = Config.FOVRadius
-    FOVCircle.Visible = Config.ShowFOV
-end)
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0.05, 0, 0.2, 0)
+ToggleButton.Text = "❄️"
+ToggleButton.TextSize = 28
+ToggleButton.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.Parent = ScreenGui
 
-local ToggleMenuBtn = Instance.new("TextButton")
-ToggleMenuBtn.Name = "ToggleMenuBtn"
-ToggleMenuBtn.Size = UDim2.new(0, 50, 0, 50)
-ToggleMenuBtn.Position = UDim2.new(0.05, 0, 0.2, 0)
-ToggleMenuBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-ToggleMenuBtn.Text = "MEO"
-ToggleMenuBtn.TextColor3 = Color3.fromRGB(0, 255, 150)
-ToggleMenuBtn.Font = Enum.Font.SourceSansBold
-ToggleMenuBtn.TextSize = 16
-ToggleMenuBtn.Parent = ScreenGui
-Instance.new("UICorner", ToggleMenuBtn).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+
+local ToggleStroke = Instance.new("UIStroke", ToggleButton)
+ToggleStroke.Thickness = 2
+ToggleStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 360, 0, 260)
-MainFrame.Position = UDim2.new(0.5, -180, 0.5, -130)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.BorderSizePixel = 0
+MainFrame.Size = UDim2.new(0, 320, 0, 260)
+MainFrame.Position = UDim2.new(0.05, 0, 0.3, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Visible = true
 MainFrame.Parent = ScreenGui
+
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
 
-ToggleMenuBtn.MouseButton1Click:Connect(function()
+ToggleButton.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, 0, 0, 35)
-TitleLabel.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-TitleLabel.Text = "  MEO HUB V1 - NIKUCHI"
-TitleLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
-TitleLabel.Font = Enum.Font.SourceSansBold
-TitleLabel.TextSize = 16
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Parent = MainFrame
-Instance.new("UICorner", TitleLabel).CornerRadius = UDim.new(0, 8)
+RunService.RenderStepped:Connect(function()
+    local hue = (tick() % 5) / 5
+    ToggleStroke.Color = Color3.fromHSV(hue, 1, 1)
+    
+    FOVCircle.Visible = Config.ShowFOV and Config.AimAuto
+    FOVCircle.Radius = Config.FOVRadius
+    FOVCircle.Position = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+end)
 
-local TabFrame = Instance.new("Frame")
-TabFrame.Size = UDim2.new(0, 90, 1, -35)
-TabFrame.Position = UDim2.new(0, 0, 0, 35)
-TabFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-TabFrame.BorderSizePixel = 0
-TabFrame.Parent = MainFrame
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Text = "Meo Hub V1🔥"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 14
+Title.Font = Enum.Font.SourceSansBold
+Title.BackgroundTransparency = 1
+Title.Parent = MainFrame
 
-local ContentFrame = Instance.new("Frame")
-ContentFrame.Size = UDim2.new(1, -95, 1, -40)
-ContentFrame.Position = UDim2.new(0, 95, 0, 38)
-ContentFrame.BackgroundTransparency = 1
-ContentFrame.Parent = MainFrame
+local TabHolder = Instance.new("Frame")
+TabHolder.Size = UDim2.new(0, 90, 1, -35)
+TabHolder.Position = UDim2.new(0, 5, 0, 30)
+TabHolder.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+TabHolder.Parent = MainFrame
+Instance.new("UICorner", TabHolder).CornerRadius = UDim.new(0, 6)
 
-local Pages = {}
-local function createPage(name)
-    local page = Instance.new("ScrollingFrame")
-    page.Name = name
-    page.Size = UDim2.new(1, 0, 1, 0)
-    page.BackgroundTransparency = 1
-    page.ScrollBarThickness = 4
-    page.Visible = false
-    page.Parent = ContentFrame
+local ESPTabBtn = Instance.new("TextButton")
+ESPTabBtn.Size = UDim2.new(1, -10, 0, 28)
+ESPTabBtn.Position = UDim2.new(0, 5, 0, 5)
+ESPTabBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+ESPTabBtn.Text = "ESP"
+ESPTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ESPTabBtn.Font = Enum.Font.SourceSansBold
+ESPTabBtn.Parent = TabHolder
+Instance.new("UICorner", ESPTabBtn).CornerRadius = UDim.new(0, 4)
 
-    local layout = Instance.new("UIListLayout")
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 6)
-    layout.Parent = page
+local AIMTabBtn = Instance.new("TextButton")
+AIMTabBtn.Size = UDim2.new(1, -10, 0, 28)
+AIMTabBtn.Position = UDim2.new(0, 5, 0, 38)
+AIMTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+AIMTabBtn.Text = "AIM"
+AIMTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AIMTabBtn.Font = Enum.Font.SourceSansBold
+AIMTabBtn.Parent = TabHolder
+Instance.new("UICorner", AIMTabBtn).CornerRadius = UDim.new(0, 4)
 
-    Pages[name] = page
-    return page
+local SettingTabBtn = Instance.new("TextButton")
+SettingTabBtn.Size = UDim2.new(1, -10, 0, 28)
+SettingTabBtn.Position = UDim2.new(0, 5, 0, 71)
+SettingTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+SettingTabBtn.Text = "Setting"
+SettingTabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SettingTabBtn.Font = Enum.Font.SourceSansBold
+SettingTabBtn.Parent = TabHolder
+Instance.new("UICorner", SettingTabBtn).CornerRadius = UDim.new(0, 4)
+
+local ESPPage = Instance.new("ScrollingFrame")
+ESPPage.Size = UDim2.new(1, -105, 1, -35)
+ESPPage.Position = UDim2.new(0, 100, 0, 30)
+ESPPage.BackgroundTransparency = 1
+ESPPage.Visible = true
+ESPPage.CanvasSize = UDim2.new(0, 0, 0, 100)
+ESPPage.ScrollBarThickness = 3
+ESPPage.Parent = MainFrame
+
+local AIMPage = Instance.new("ScrollingFrame")
+AIMPage.Size = UDim2.new(1, -105, 1, -35)
+AIMPage.Position = UDim2.new(0, 100, 0, 30)
+AIMPage.BackgroundTransparency = 1
+AIMPage.Visible = false
+AIMPage.CanvasSize = UDim2.new(0, 0, 0, 130)
+AIMPage.ScrollBarThickness = 3
+AIMPage.Parent = MainFrame
+
+local SettingPage = Instance.new("ScrollingFrame")
+SettingPage.Size = UDim2.new(1, -105, 1, -35)
+SettingPage.Position = UDim2.new(0, 100, 0, 30)
+SettingPage.BackgroundTransparency = 1
+SettingPage.Visible = false
+SettingPage.CanvasSize = UDim2.new(0, 0, 0, 420)
+SettingPage.ScrollBarThickness = 3
+SettingPage.Parent = MainFrame
+
+local function switchTab(activeBtn, activePage)
+    ESPTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    AIMTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    SettingTabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    
+    ESPPage.Visible = false
+    AIMPage.Visible = false
+    SettingPage.Visible = false
+    
+    activeBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    activePage.Visible = true
 end
 
-local MainTab = createPage("Main")
-local TargetTab = createPage("Target")
-local SettingTab = createPage("Setting")
-MainTab.Visible = true
+ESPTabBtn.MouseButton1Click:Connect(function() switchTab(ESPTabBtn, ESPPage) end)
+AIMTabBtn.MouseButton1Click:Connect(function() switchTab(AIMTabBtn, AIMPage) end)
+SettingTabBtn.MouseButton1Click:Connect(function() switchTab(SettingTabBtn, SettingPage) end)
 
-local function createTabBtn(text, pageName, posY)
+local function createToggle(parent, text, yPos, defaultState, callback)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -10, 0, 30)
-    btn.Position = UDim2.new(0, 5, 0, posY)
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btn.Font = Enum.Font.SourceSans
-    btn.TextSize = 14
-    btn.Parent = TabFrame
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
-
-    btn.MouseButton1Click:Connect(function()
-        for _, p in pairs(Pages) do p.Visible = false end
-        Pages[pageName].Visible = true
-    end)
-end
-
-createTabBtn("Chức Năng", "Main", 5)
-createTabBtn("Mục Tiêu", "Target", 40)
-createTabBtn("Cài Đặt", "Setting", 75)
-
-local function createToggle(parent, text, configKey)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -8, 0, 30)
-    btn.BackgroundColor3 = Config[configKey] and Color3.fromRGB(0, 150, 80) or Color3.fromRGB(40, 40, 40)
-    btn.Text = text .. ": " .. (Config[configKey] and "BẬT" or "TẮT")
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.SourceSans
-    btn.TextSize = 14
+    btn.Size = UDim2.new(1, -15, 0, 30)
+    btn.Position = UDim2.new(0, 5, 0, yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    btn.Text = text .. (defaultState and ": BẬT" or ": TẮT")
+    btn.TextColor3 = defaultState and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 13
     btn.Parent = parent
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
 
+    local state = defaultState
     btn.MouseButton1Click:Connect(function()
-        Config[configKey] = not Config[configKey]
-        btn.BackgroundColor3 = Config[configKey] and Color3.fromRGB(0, 150, 80) or Color3.fromRGB(40, 40, 40)
-        btn.Text = text .. ": " .. (Config[configKey] and "BẬT" or "TẮT")
+        state = not state
+        btn.Text = text .. (state and ": BẬT" or ": TẮT")
+        btn.TextColor3 = state and Color3.fromRGB(100, 255, 100) or Color3.fromRGB(255, 100, 100)
+        callback(state)
+    end)
+    return btn
+end
+
+local function createTextBox(parent, labelText, yPos, defaultValue, callback)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1, -15, 0, 15)
+    lbl.Position = UDim2.new(0, 5, 0, yPos)
+    lbl.Text = labelText
+    lbl.TextColor3 = Color3.fromRGB(200, 200, 200)
+    lbl.TextSize = 12
+    lbl.Font = Enum.Font.SourceSans
+    lbl.BackgroundTransparency = 1
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = parent
+
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(1, -15, 0, 25)
+    box.Position = UDim2.new(0, 5, 0, yPos + 18)
+    box.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    box.Text = tostring(defaultValue)
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    box.Font = Enum.Font.SourceSansBold
+    box.TextSize = 13
+    box.Parent = parent
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
+
+    box.FocusLost:Connect(function()
+        local val = tonumber(box.Text)
+        if val then callback(val) else box.Text = tostring(defaultValue) end
     end)
 end
 
-createToggle(MainTab, "Aim Auto (Lock Head)", "AimAuto")
-createToggle(MainTab, "Hiện Red Chams", "Chams")
-createToggle(MainTab, "Thanh Máu ESP", "HealthESP")
-createToggle(MainTab, "Auto Kill", "AutoKill")
-createToggle(MainTab, "Bay (Fly)", "Fly")
-createToggle(MainTab, "Xoay (Spin)", "Spin")
+createToggle(ESPPage, "chams red", 5, Config.Chams, function(v) Config.Chams = v end)
+createToggle(ESPPage, "ESP Thanh Máu", 40, Config.HealthESP, function(v) Config.HealthESP = v end)
 
-createToggle(SettingTab, "Hiện Vòng FOV", "ShowFOV")
-createToggle(SettingTab, "Đi Xuyên Tường (Noclip)", "Noclip")
+createToggle(AIMPage, "aim auto", 5, Config.AimAuto, function(v) Config.AimAuto = v end)
+createToggle(AIMPage, "Hiện FOV", 40, Config.ShowFOV, function(v) Config.ShowFOV = v end)
+createTextBox(AIMPage, "Đường kính FOV:", 75, Config.FOVRadius, function(v) Config.FOVRadius = v end)
+
+createToggle(SettingPage, "Auto Kill", 5, Config.AutoKill, function(v) Config.AutoKill = v end)
+createTextBox(SettingPage, "Khoảng cách Auto Kill (m):", 40, Config.AutoKillDistance, function(v) Config.AutoKillDistance = v end)
 
 local TargetLabel = Instance.new("TextLabel")
-TargetLabel.Size = UDim2.new(1, -8, 0, 25)
+TargetLabel.Size = UDim2.new(1, -55, 0, 15)
+TargetLabel.Position = UDim2.new(0, 5, 0, 85)
 TargetLabel.Text = "Chọn Mục tiêu: Tất Cả"
-TargetLabel.TextColor3 = Color3.fromRGB(0, 255, 150)
-TargetLabel.BackgroundTransparency = 1
+TargetLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+TargetLabel.TextSize = 12
 TargetLabel.Font = Enum.Font.SourceSansBold
-TargetLabel.TextSize = 14
-TargetLabel.Parent = TargetTab
+TargetLabel.BackgroundTransparency = 1
+TargetLabel.TextXAlignment = Enum.TextXAlignment.Left
+TargetLabel.Parent = SettingPage
 
 local RefreshBtn = Instance.new("TextButton")
-RefreshBtn.Size = UDim2.new(1, -8, 0, 25)
-RefreshBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
-RefreshBtn.Text = "🔄 Làm Mới Danh Sách"
+RefreshBtn.Size = UDim2.new(0, 35, 0, 18)
+RefreshBtn.Position = UDim2.new(1, -45, 0, 83)
+RefreshBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+RefreshBtn.Text = "🔄"
 RefreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-RefreshBtn.Font = Enum.Font.SourceSans
-RefreshBtn.TextSize = 13
-RefreshBtn.Parent = TargetTab
+RefreshBtn.TextSize = 12
+RefreshBtn.Parent = SettingPage
 Instance.new("UICorner", RefreshBtn).CornerRadius = UDim.new(0, 4)
 
 local TargetListFrame = Instance.new("ScrollingFrame")
-TargetListFrame.Size = UDim2.new(1, -8, 0, 110)
-TargetListFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-TargetListFrame.ScrollBarThickness = 4
-TargetListFrame.Parent = TargetTab
+TargetListFrame.Size = UDim2.new(1, -15, 0, 80)
+TargetListFrame.Position = UDim2.new(0, 5, 0, 105)
+TargetListFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+TargetListFrame.ScrollBarThickness = 3
+TargetListFrame.Parent = SettingPage
+Instance.new("UICorner", TargetListFrame).CornerRadius = UDim.new(0, 6)
 
-local TargetListLayout = Instance.new("UIListLayout")
-TargetListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-TargetListLayout.Padding = UDim.new(0, 2)
-TargetListLayout.Parent = TargetListFrame
+local TargetUIList = Instance.new("UIListLayout")
+TargetUIList.SortOrder = Enum.SortOrder.LayoutOrder
+TargetUIList.Padding = UDim.new(0, 2)
+TargetUIList.Parent = TargetListFrame
+
+createToggle(SettingPage, "Xoay Nhân Vật (Spin)", 195, Config.Spin, function(v) Config.Spin = v end)
+createTextBox(SettingPage, "Tốc độ quay spin:", 230, Config.SpinSpeed, function(v) Config.SpinSpeed = v end)
+
+createToggle(SettingPage, "góc nhìn thứ 3", 273, Config.ThirdPerson, function(v) 
+    Config.ThirdPerson = v
+    if v then
+        LocalPlayer.CameraMaxZoomDistance = 25
+        LocalPlayer.CameraMinZoomDistance = 10
+    else
+        LocalPlayer.CameraMaxZoomDistance = 400
+        LocalPlayer.CameraMinZoomDistance = 0.5
+        if LocalPlayer.Character then
+            for _, p in pairs(LocalPlayer.Character:GetChildren()) do
+                if p:IsA("BasePart") then p.LocalTransparencyModifier = 0 end
+            end
+        end
+    end
+end)
+
+createToggle(SettingPage, "Bay (Fly)", 313, Config.Fly, function(v) Config.Fly = v end)
+createTextBox(SettingPage, "Tốc độ Fly:", 350, Config.FlySpeed, function(v) Config.FlySpeed = v end)
 local function isRivalsEnemy(player)
     if not player or not player:IsA("Player") or player == LocalPlayer then 
         return false 
@@ -269,8 +347,10 @@ local function applyRedChams(char)
         folder.Parent = char
     end
 
-    for _, part in pairs(char:GetChildren()) do
-        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+    local partsToCheck = {"Head", "UpperTorso", "LowerTorso", "HumanoidRootPart", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "LeftLowerArm", "RightLowerArm", "LeftUpperArm", "RightUpperArm", "LeftLowerLeg", "RightLowerLeg", "LeftUpperLeg", "RightUpperLeg"}
+    for _, partName in pairs(partsToCheck) do
+        local part = char:FindFirstChild(partName)
+        if part and part:IsA("BasePart") then
             local chamsBox = folder:FindFirstChild(part.Name .. "_Chams")
             if not chamsBox then
                 chamsBox = Instance.new("BoxHandleAdornment")
@@ -411,16 +491,7 @@ local function startFly()
 end
 
 local spinAngle = 0
-
 RunService.RenderStepped:Connect(function()
-    if Config.Noclip and LocalPlayer.Character then
-        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-    end
-
     if Config.Fly then
         local Character = LocalPlayer.Character
         if Character then
@@ -431,31 +502,34 @@ RunService.RenderStepped:Connect(function()
                     startFly()
                 end
 
-                local MoveDir = Humanoid.MoveDirection
-                local Velocity = Vector3.new(0, 0, 0)
+                local Camera = workspace.CurrentCamera
+                if Camera then
+                    local MoveDir = Humanoid.MoveDirection
+                    local Velocity = Vector3.new(0, 0, 0)
 
-                if MoveDir.Magnitude > 0 then
-                    local Look = Camera.CFrame.LookVector
-                    local Right = Camera.CFrame.RightVector
-                    
-                    local FlatLook = Vector3.new(Look.X, 0, Look.Z).Unit
-                    local FlatRight = Vector3.new(Right.X, 0, Right.Z).Unit
-                    
-                    if FlatLook.Magnitude > 0 and FlatRight.Magnitude > 0 then
-                        local ForwardScore = MoveDir:Dot(FlatLook)
-                        local RightScore = MoveDir:Dot(FlatRight)
+                    if MoveDir.Magnitude > 0 then
+                        local Look = Camera.CFrame.LookVector
+                        local Right = Camera.CFrame.RightVector
                         
-                        local TargetDir = (Look * ForwardScore) + (Right * RightScore)
-                        if TargetDir.Magnitude > 0 then
-                            Velocity = TargetDir.Unit * Config.FlySpeed
+                        local FlatLook = Vector3.new(Look.X, 0, Look.Z).Unit
+                        local FlatRight = Vector3.new(Right.X, 0, Right.Z).Unit
+                        
+                        if FlatLook.Magnitude > 0 and FlatRight.Magnitude > 0 then
+                            local ForwardScore = MoveDir:Dot(FlatLook)
+                            local RightScore = MoveDir:Dot(FlatRight)
+                            
+                            local TargetDir = (Look * ForwardScore) + (Right * RightScore)
+                            if TargetDir.Magnitude > 0 then
+                                Velocity = TargetDir.Unit * Config.FlySpeed
+                            end
                         end
                     end
-                end
 
-                if activeBodyVelocity then
-                    activeBodyVelocity.Velocity = Velocity
+                    if activeBodyVelocity then
+                        activeBodyVelocity.Velocity = Velocity
+                    end
+                    Torso.RotVelocity = Vector3.new(0, 0, 0)
                 end
-                Torso.RotVelocity = Vector3.new(0, 0, 0)
             end
         end
     else
@@ -487,7 +561,8 @@ RunService.RenderStepped:Connect(function()
         end
 
         if Config.AimAuto and enemyHead and not Config.AutoKill then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, enemyHead.Position)
+            local predictedPos = enemyHead.Position + (enemyHead.AssemblyLinearVelocity * 0.05)
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, predictedPos)
         end
     end
 
