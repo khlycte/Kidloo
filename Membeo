@@ -19,7 +19,8 @@ local Config = {
     SpinSpeed = 20,
     ThirdPerson = false,
     Fly = false,
-    FlySpeed = 50
+    FlySpeed = 50,
+    Noclip = false
 }
 
 local ScreenGui = Instance.new("ScreenGui")
@@ -144,7 +145,7 @@ SettingPage.Size = UDim2.new(1, -105, 1, -35)
 SettingPage.Position = UDim2.new(0, 100, 0, 30)
 SettingPage.BackgroundTransparency = 1
 SettingPage.Visible = false
-SettingPage.CanvasSize = UDim2.new(0, 0, 0, 420)
+SettingPage.CanvasSize = UDim2.new(0, 0, 0, 460)
 SettingPage.ScrollBarThickness = 3
 SettingPage.Parent = MainFrame
 
@@ -281,6 +282,7 @@ end)
 
 createToggle(SettingPage, "Bay (Fly)", 313, Config.Fly, function(v) Config.Fly = v end)
 createTextBox(SettingPage, "Tốc độ Fly:", 350, Config.FlySpeed, function(v) Config.FlySpeed = v end)
+createToggle(SettingPage, "Noclip", 390, Config.Noclip, function(v) Config.Noclip = v end)
 local function isRivalsEnemy(player)
     if not player or not player:IsA("Player") or player == LocalPlayer then 
         return false 
@@ -535,6 +537,14 @@ RunService.RenderStepped:Connect(function()
     else
         if activeBodyVelocity then
             stopFly()
+        end
+    end
+
+    if Config.Noclip and LocalPlayer.Character then
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
         end
     end
 
